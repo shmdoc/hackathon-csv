@@ -12,6 +12,20 @@ def index(element):
     global types
     return types[element] if isinstance(element, type) else element
 
+
+# Given a string, what does the string probably contain?
+def analyze_string_type(element, occurrences):
+    supported_strings = {}
+
+    for type in supported_strings:
+        if supported_strings[type](element):
+            if type not in occurrences:
+                occurrences[type] = 0
+            occurrences[type] += 1
+
+    return occurrences
+
+
 def analyze_most_common(column_data):
     common_elements = []
 
@@ -58,6 +72,9 @@ def count_type_occurances(column_data):
             occurrences["empty"] += 1
             occurrences[index("float")] -= 1  # Because it's actually not a float, but empty
 
+        if isinstance(element, str):
+            occurrences["str-data"] = analyze_string_type(element, occurrences["str-data"])
+
         for type in types:
             if isinstance(element, type):
                 occurrences[index(type)] += 1
@@ -99,9 +116,8 @@ for column in data:
         stats["most_common"] = analyze_most_common(column_data)
 
     if stats["type-occurrences"][index(bool)] or \
-       stats["type-occurrences"][index(int)] or \
-       stats["type-occurrences"][index(float)]:
-
+            stats["type-occurrences"][index(int)] or \
+            stats["type-occurrences"][index(float)]:
         stats["avg"] = column_data.mean()
         stats["min"] = column_data.min()
         stats["max"] = column_data.max()
