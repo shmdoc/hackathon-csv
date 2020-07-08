@@ -13,10 +13,17 @@ def index(element):
     global types
     return types[element] if isinstance(element, type) else element
 
+def is_datetime(string):
+    try:
+        datetime.fromisoformat(string)
+        datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return True
+    except ValueError:
+        return False
 
 # Given a string, what does the string probably contain?
 def analyze_string_type(element, occurrences):
-    supported_strings = {}
+    supported_strings = {"datetime": is_datetime}
 
     for type in supported_strings:
         if supported_strings[type](element):
@@ -58,11 +65,21 @@ def predict_seperator(filename):
     return current_seperator
 
 
+def make_dict_relative(dictionary, size):
+    for type in dictionary:
+        idx = index(type)
+        if isinstance(dictionary[idx], dict):
+            dictionary[idx] = make_dict_relative(dictionary[idx], size)
+        else:
+            dictionary[idx] = dictionary[idx] / column_data.size
+    return dictionary
+
+
 def count_type_occurances(column_data):
     occurrences["empty"] = 0
+    occurrences["str-data"] = dict()
 
     global types
-
     for type in types:
         occurrences[index(type)] = 0
 
@@ -81,8 +98,7 @@ def count_type_occurances(column_data):
                 occurrences[index(type)] += 1
 
     # Make the absolute values relative
-    for type in occurrences:
-        occurrences[index(type)] = occurrences[index(type)] / column_data.size
+    occurences = make_dict_relative(occurrences, column_data.size)
 
     return occurrences
 
@@ -96,7 +112,8 @@ def export_json(filename, data):
     #     json.dump(data, fp)
 
 
-input_file = "dwca-est_grey_seals_00-16-v1.1/event.txt"
+# input_file = "dwca-est_grey_seals_00-16-v1.1/event.txt"
+input_file = "data.csv"
 
 # reading csv file
 data = pd.read_csv(input_file, sep=predict_seperator(input_file))
