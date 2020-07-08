@@ -8,6 +8,9 @@ from numpyencoder import NumpyEncoder
 
 
 # Todo: occurances should not be global
+def index(element):
+    global types
+    return types[element] if isinstance(element, type) else element
 
 def analyze_most_common(column_data):
     common_elements = []
@@ -41,29 +44,29 @@ def predict_seperator(filename):
 
 
 def count_type_occurances(column_data):
-    occurances["empty"] = 0
+    occurrences["empty"] = 0
 
     global types
 
     for type in types:
-        occurances[str(type)] = 0
+        occurrences[index(type)] = 0
 
     for element in column_data:
         # float check because math.isnan() only works on real numbers
         if isinstance(element, float) and math.isnan(element):
             # Empty cells get converted to NaN by pandas
-            occurances["empty"] += 1
-            occurances[str(float)] -= 1  # Because it's actually not a float, but empty
+            occurrences["empty"] += 1
+            occurrences[index("float")] -= 1  # Because it's actually not a float, but empty
 
         for type in types:
             if isinstance(element, type):
-                occurances[str(type)] += 1
+                occurrences[index(type)] += 1
 
     # Make the absolute values relative
-    for type in occurances:
-        occurances[str(type)] = occurances[str(type)] / column_data.size
+    for type in occurrences:
+        occurrences[index(type)] = occurrences[index(type)] / column_data.size
 
-    return occurances
+    return occurrences
 
 
 def export_json(filename, data):
@@ -85,27 +88,30 @@ types = {bool: "bool", int: "int", float: "float", str: "str"}
 
 # finding the type of each column
 for column in data:
-    occurances = dict()
+    occurrences = dict()
     column_data = data[column]
     stats = dict()
 
-    stats["occurances"] = count_type_occurances(column_data)
+    stats["type-occurrences"] = count_type_occurances(column_data)
 
     # There is nothing useful to say about most common nan's in an empty column
-    if not stats["occurances"]["empty"] == 1.0:
+    if not stats["type-occurrences"]["empty"] == 1.0:
         stats["most_common"] = analyze_most_common(column_data)
 
-    if stats["occurances"][str(bool)] or stats["occurances"][str(int)] or stats["occurances"][str(float)]:
+    if stats["type-occurrences"][index(bool)] or \
+       stats["type-occurrences"][index(int)] or \
+       stats["type-occurrences"][index(float)]:
+
         stats["avg"] = column_data.mean()
         stats["min"] = column_data.min()
         stats["max"] = column_data.max()
         stats["sd"] = column_data.std()  # Standard deviation
 
-    if stats["occurances"][str(str)]:
+    if stats["type-occurrences"][index(str)]:
         str_lengths = [len(el) for el in column_data]
-        stats["avg_length"] = 0 if len(str_lengths) == 0 else (float(sum(str_lengths)) / len(str_lengths))
-        stats["min_length"] = min(str_lengths)
-        stats["max_length"] = max(str_lengths)
+        stats["avg-length"] = 0 if len(str_lengths) == 0 else (float(sum(str_lengths)) / len(str_lengths))
+        stats["min-length"] = min(str_lengths)
+        stats["max-length"] = max(str_lengths)
 
     # print("Something went wrong in {}".format(column))
 
