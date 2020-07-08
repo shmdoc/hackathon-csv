@@ -5,6 +5,7 @@ import json
 from pprint import pprint
 from collections import Counter
 from numpyencoder import NumpyEncoder
+from datetime import datetime
 
 
 # Todo: occurances should not be global
@@ -129,7 +130,8 @@ for column in data:
         stats["min-length"] = min(str_lengths)
         stats["max-length"] = max(str_lengths)
 
-    # print("Something went wrong in {}".format(column))
+    # Add a timestamp for when the last update was
+    stats["timestamp"] = str(datetime.now())
 
     data_info[column] = stats
 
