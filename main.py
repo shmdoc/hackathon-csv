@@ -2,6 +2,7 @@
 import pandas as pd
 import math
 import json
+import datefinder
 from pprint import pprint
 from collections import Counter
 from numpyencoder import NumpyEncoder
@@ -13,13 +14,16 @@ def index(element):
     global types
     return types[element] if isinstance(element, type) else element
 
+
 def is_datetime(string):
-    try:
-        datetime.fromisoformat(string)
-        datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%fZ')
+    # Check whether there's any date / datetime somewhere in the string
+    # stricts requires there to be a year, month and day (without strict, even strings like "error" are a date somehow)
+    matches = datefinder.find_dates(string)
+    for match in matches:
+        # I didn't find a way to check len(matches), so this iteration solves it
         return True
-    except ValueError:
-        return False
+    return False
+
 
 # Given a string, what does the string probably contain?
 def analyze_string_type(element, occurrences):
