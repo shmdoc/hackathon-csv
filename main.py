@@ -38,6 +38,14 @@ def analyze_string_type(element, occurrences):
     return occurrences
 
 
+def analyze_string_row(column_data):
+    occurrences = dict()
+    for element in column_data:
+        occurrences = analyze_string_type(element, occurrences)
+    make_dict_relative(occurrences, column_data.size)
+    return occurrences
+
+
 def analyze_most_common(column_data):
     common_elements = []
 
@@ -80,8 +88,8 @@ def make_dict_relative(dictionary, size):
 
 
 def count_type_occurances(column_data):
+    occurrences = dict()
     occurrences["empty"] = 0
-    occurrences["str-data"] = dict()
 
     global types
     for type in types:
@@ -94,15 +102,12 @@ def count_type_occurances(column_data):
             occurrences["empty"] += 1
             occurrences[index("float")] -= 1  # Because it's actually not a float, but empty
 
-        if isinstance(element, str):
-            occurrences["str-data"] = analyze_string_type(element, occurrences["str-data"])
-
         for type in types:
             if isinstance(element, type):
                 occurrences[index(type)] += 1
 
     # Make the absolute values relative
-    occurences = make_dict_relative(occurrences, column_data.size)
+    occurrences = make_dict_relative(occurrences, column_data.size)
 
     return occurrences
 
@@ -116,8 +121,7 @@ def export_json(filename, data):
     #     json.dump(data, fp)
 
 
-# input_file = "dwca-est_grey_seals_00-16-v1.1/event.txt"
-input_file = "data.csv"
+input_file = "dwca-est_grey_seals_00-16-v1.1/event.txt"
 
 # reading csv file
 data = pd.read_csv(input_file, sep=predict_seperator(input_file))
@@ -150,6 +154,7 @@ for column in data:
         stats["avg-length"] = 0 if len(str_lengths) == 0 else (float(sum(str_lengths)) / len(str_lengths))
         stats["min-length"] = min(str_lengths)
         stats["max-length"] = max(str_lengths)
+        stats["str-data"] = analyze_string_row(column_data)
 
     # Add a timestamp for when the last update was
     stats["timestamp"] = str(datetime.now())
